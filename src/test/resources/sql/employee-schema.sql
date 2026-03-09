@@ -1,0 +1,7 @@
+DROP TABLE IF EXISTS employees;
+
+CREATE TABLE employees (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(64) NOT NULL,
+    email VARCHAR(128) NOT NULL
+);
