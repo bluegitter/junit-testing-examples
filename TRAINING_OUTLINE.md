@@ -48,15 +48,19 @@
 - `@Mock`、`@InjectMocks`、`when`、`verify`、`never`
 - 参数捕获：`ArgumentCaptor`
 - 调用顺序：`InOrder`
+- 外部接口 Mock 基础场景：正常返回、超时、不可用
+- 外部接口 Mock 进阶场景：异常分类、输入校验、空响应、未知状态、批量查询聚合
 - 演示文件：
   - `src/test/java/com/company/training/service/UserServiceMockitoTest.java`
   - `src/test/java/com/company/training/service/UserServiceArgumentCaptorTest.java`
   - `src/test/java/com/company/training/service/UserServiceInteractionOrderTest.java`
+  - `src/test/java/com/company/training/service/OrderStatusServiceExternalCallTest.java`
 
 ## 8. 高级技巧
 - `assertAll`、`assertDoesNotThrow`
 - `assumeTrue`（条件跳过）
 - `@RepeatedTest`、`@TestFactory`
+- `@TestFactory` 的使用边界与生命周期差异
 - 演示文件：
   - `src/test/java/com/company/training/core/AssertionsAndAssumptionsTest.java`
   - `src/test/java/com/company/training/core/RepeatedAndDynamicTest.java`
@@ -73,10 +77,12 @@
 
 ## 10. MyBatis Mapper 层 CRUD 测试
 - `@MybatisTest` 验证 SQL 映射
-- 增删查改（insert/update/delete/select）
+- CRUD 核心验证点：`insert`、`selectById`、`update`、`delete`、`selectAll`
+- H2 + `@Sql` 保证测试隔离
 - 演示文件：
   - `src/main/java/com/company/training/spring/mapper/EmployeeMapper.java`
   - `src/test/java/com/company/training/spring/mapper/EmployeeMapperMybatisTest.java`
+  - `src/test/resources/sql/employee-schema.sql`
 
 ## 11. MyBatis Service 集成测试
 - `@SpringBootTest` 验证业务层 + Mapper 协作
@@ -96,4 +102,5 @@
 - 一键命令：`mvn clean verify`
 - 单测报告：`target/surefire-reports/`、`target/site/surefire-report.html`
 - 覆盖率报告：`target/site/jacoco/index.html`、`target/site/jacoco/jacoco.xml`
+- 报告解读：如何看 `Failures`、`Errors`、`Skipped` 与关键类覆盖率
 - CI 集成：报告上传与覆盖率阈值校验
