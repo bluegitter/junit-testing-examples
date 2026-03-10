@@ -211,7 +211,7 @@ verifyNoMoreInteractions(userRepository, emailSender);
 
 但它也应谨慎使用，因为过度使用会让测试对实现细节过于敏感。
 
-## 7.12 外部接口调用 Mock 示例
+## 7.12 外部接口 Mock 基础场景
 除了数据库、消息和邮件依赖，另一个非常常见的场景是：  
 服务层需要调用第三方 HTTP 接口或远程服务。
 
@@ -281,7 +281,16 @@ throw new IllegalStateException("Order service is unavailable", ex);
 - 业务流程无法在当前条件下继续
 - 需要把远程系统异常转换为本系统可识别异常
 
-### 7.12.4 异常分类处理场景
+## 7.13 外部接口 Mock 进阶场景
+基础场景解决的是“如何 mock 一次远端调用”，但真实项目通常还会遇到更复杂的外部依赖处理问题，例如：
+- 相同接口失败原因不同，恢复策略也不同
+- 输入参数本身就不合法，不应继续访问远端
+- 响应结构不完整或返回值超出系统认知范围
+- 批量查询中既有成功项也有失败项，需要聚合输出
+
+因此，在掌握基础场景后，还需要进一步理解外部接口测试中的容错、分类和聚合思路。
+
+### 7.13.1 异常分类处理场景
 外部接口失败并不是单一概念。  
 在工程实践中，至少要区分以下几类情况：
 
@@ -321,7 +330,7 @@ when(externalOrderClient.queryStatus("ORD-1010")).thenThrow(remoteBug);
 
 这一类异常通常不应直接透传给上层，而应包装为统一的业务异常，并保留原始 `cause` 便于排查。
 
-### 7.12.5 请求参数非法场景
+### 7.13.2 请求参数非法场景
 外部接口测试不应只覆盖远端行为，还应覆盖本地的前置校验逻辑。  
 在 `OrderStatusService` 中，如果订单号为空或只包含空白字符，将直接抛出异常，而不会发起远程调用：
 
@@ -335,7 +344,7 @@ verify(externalOrderClient, never()).queryStatus(" ");
 - 输入校验应尽量在服务入口完成，尽早失败。
 - 对非法输入，不应把错误流转给远端系统。
 
-### 7.12.6 接口返回空响应场景
+### 7.13.3 接口返回空响应场景
 真实系统中，第三方接口并不一定总能返回结构完整的对象。  
 如果远端返回 `null`，测试应验证服务层是否具备明确的兜底处理：
 
@@ -348,7 +357,7 @@ when(externalOrderClient.queryStatus("ORD-1004")).thenReturn(null);
 - 避免 `NullPointerException`
 - 让调用方拿到稳定、可识别的结果
 
-### 7.12.7 接口返回未知状态场景
+### 7.13.4 接口返回未知状态场景
 第三方接口的返回值并不总是严格受控。  
 当远端返回了系统尚未识别的新状态值时，服务层需要决定是抛错、忽略，还是统一兜底。
 
@@ -362,7 +371,7 @@ when(externalOrderClient.queryStatus("ORD-1005"))
 - 外部枚举值可能扩展，但本系统尚未完成兼容
 - 希望保留业务可用性，而不是因为新状态导致流程直接失败
 
-### 7.12.8 批量查询与聚合结果场景
+### 7.13.5 批量查询与聚合结果场景
 真实业务里，外部接口调用并不总是单笔发生。  
 例如订单中心、对账任务、运营后台常常需要对一批订单逐个查询状态，然后汇总输出。
 
@@ -393,7 +402,7 @@ when(externalOrderClient.queryStatus("ORD-1005"))
 - 重试行为
 - 聚合结果结构
 
-### 7.12.9 这个示例在培训中的价值
+### 7.13.6 这个示例在培训中的价值
 这个外部接口示例补充了 Mockito 的另一类高频用法：
 - 不只是 mock 仓储或本地依赖
 - 还可以 mock 网络接口和第三方服务
@@ -411,10 +420,10 @@ when(externalOrderClient.queryStatus("ORD-1005"))
 - 未知状态统一映射
 - 批量查询中的部分成功、部分失败与聚合处理
 
-## 7.13 案例串联：四个测试类分别解决什么问题
+## 7.14 案例串联：四个测试类分别解决什么问题
 本项目用四个测试类覆盖了 Mockito 的不同关注点：
 
-### 7.13.1 `UserServiceMockitoTest`
+### 7.14.1 `UserServiceMockitoTest`
 对应文件：
 - `src/test/java/com/company/training/service/UserServiceMockitoTest.java`
 
@@ -425,7 +434,7 @@ when(externalOrderClient.queryStatus("ORD-1005"))
 
 这是 Mockito 最基础、最常见的服务层测试模板。
 
-### 7.13.2 `UserServiceArgumentCaptorTest`
+### 7.14.2 `UserServiceArgumentCaptorTest`
 对应文件：
 - `src/test/java/com/company/training/service/UserServiceArgumentCaptorTest.java`
 
@@ -435,7 +444,7 @@ when(externalOrderClient.queryStatus("ORD-1005"))
 
 这是参数传递正确性的验证。
 
-### 7.13.3 `UserServiceInteractionOrderTest`
+### 7.14.3 `UserServiceInteractionOrderTest`
 对应文件：
 - `src/test/java/com/company/training/service/UserServiceInteractionOrderTest.java`
 
@@ -445,7 +454,7 @@ when(externalOrderClient.queryStatus("ORD-1005"))
 
 这是流程顺序正确性的验证。
 
-### 7.13.4 `OrderStatusServiceExternalCallTest`
+### 7.14.4 `OrderStatusServiceExternalCallTest`
 对应文件：
 - `src/test/java/com/company/training/service/OrderStatusServiceExternalCallTest.java`
 
@@ -461,21 +470,21 @@ when(externalOrderClient.queryStatus("ORD-1005"))
 - 时序正确性
 - 外部接口异常处理
 
-## 7.14 Mock 使用中的常见误区
-### 7.14.1 过度 Mock
+## 7.15 Mock 使用中的常见误区
+### 7.15.1 过度 Mock
 把值对象、简单工具类甚至被测类本身也 Mock 掉，会让测试失去真实业务意义。
 
-### 7.14.2 只验证交互，不验证结果
+### 7.15.2 只验证交互，不验证结果
 如果只看 `verify(...)`，不看返回值或异常，测试容易变成“流程脚本”，而不是业务验证。
 
-### 7.14.3 只验证结果，不验证关键副作用
+### 7.15.3 只验证结果，不验证关键副作用
 对于服务层方法，这也不够。很多关键问题出现在“结果对了，但副作用错了”。
 
-### 7.14.4 对实现细节约束过多
+### 7.15.4 对实现细节约束过多
 并不是每个内部调用都值得验证。  
 应优先验证具有业务意义的交互，而不是把测试写成对实现步骤的逐行审查。
 
-### 7.14.5 只测正常返回，不测外部依赖异常
+### 7.15.5 只测正常返回，不测外部依赖异常
 对于外部接口调用，真正高风险的往往不是“返回成功”，而是：
 - 超时
 - 接口不可用
@@ -483,7 +492,7 @@ when(externalOrderClient.queryStatus("ORD-1005"))
 
 如果只覆盖正常场景，测试保护能力是不完整的。
 
-## 7.15 实践建议
+## 7.16 实践建议
 - 对服务层测试，至少覆盖一条成功路径和一条失败路径。
 - 对有副作用的方法，同时验证结果与关键交互。
 - 对关键参数传递使用 `ArgumentCaptor`，而不是只用 `any(...)`。
