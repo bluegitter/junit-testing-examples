@@ -1,4 +1,4 @@
-# 第10章 MyBatis Mapper层CRUD测试
+# 第10章 MyBatis Mapper 层 CRUD 测试
 
 ## 本章导读
 在使用 MyBatis 的项目中，Mapper 层承担着 SQL 执行与结果映射的职责。很多团队在测试时容易忽略这一层，认为只要 Service 跑通即可。但从工程角度看，Mapper 层恰恰是最容易因 SQL 变更、字段映射变化或数据库脚本调整而出现回归问题的地方。本章聚焦 MyBatis Mapper 层的单独测试，说明为什么要测、测什么，以及如何利用 `@MybatisTest`、H2 内存数据库和 SQL 初始化脚本快速建立稳定的 CRUD 测试。

@@ -1,4 +1,4 @@
-# 第11章 MyBatis Service集成测试
+# 第11章 MyBatis Service 集成测试
 
 ## 本章导读
 在前一章中，Mapper 层测试解决的是“SQL 执行与结果映射是否正确”的问题。但在真实业务中，数据访问往往不是直接从测试代码调用 Mapper，而是通过 Service 层完成业务编排、参数组装和调用协调。因此，仅有 Mapper 测试还不够，还需要进一步验证 Service 与 Mapper 之间的协作是否正常、Spring 容器是否正确装配、数据库环境是否可用。本章聚焦 Service 层集成测试，说明它与 Mapper 测试的区别、使用场景以及当前项目中的完整示例。
