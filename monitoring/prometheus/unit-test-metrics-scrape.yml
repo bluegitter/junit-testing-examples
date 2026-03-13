@@ -1,0 +1,10 @@
+- job_name: junit-training-unit-tests
+  scrape_interval: 15s
+  metrics_path: /actuator/prometheus
+  static_configs:
+  - targets:
+    - 192.168.51.108:8080
+    labels:
+      app: junit-training-examples
+      metric_domain: unit-test
+      source: yanfei-macbook

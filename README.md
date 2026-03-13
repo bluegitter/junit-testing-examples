@@ -96,6 +96,76 @@ mvn clean verify
 - 覆盖率 HTML 报告：`target/site/jacoco/index.html`
 - 覆盖率 XML 报告：`target/site/jacoco/jacoco.xml`
 
+## 什么是“单元测试指标透出”
+
+单元测试指标透出，是指把原本只存在于测试报告里的结果，例如：
+- 总用例数
+- 通过/失败/跳过数
+- 执行耗时
+- 覆盖率
+
+转换成 Prometheus 可抓取的监控指标，再在 Grafana 中可视化展示。  
+这类做法常用于 CI 质量看板、培训演示环境、测试平台和质量门禁。
+
+本项目已经补充了一个最小示例：
+- 启动 Spring Boot 应用后，可从 `target/surefire-reports/*.xml` 和 `target/site/jacoco/jacoco.xml` 读取测试结果
+- 通过 `/actuator/prometheus` 暴露为 Prometheus 指标
+- 通过 `/api/test-metrics/summary` 查看当前聚合结果
+- 通过 `/api/test-metrics/refresh` 手工刷新一次指标快照
+
+主要指标包括：
+- `training_unit_test_cases_total{status="total|passed|failed|error|skipped"}`
+- `training_unit_test_suites_total`
+- `training_unit_test_duration_seconds`
+- `training_unit_test_success_rate`
+- `training_unit_test_last_run_timestamp_seconds`
+- `training_unit_test_coverage_ratio{counter="line|branch|instruction|method|class|complexity"}`
+
+## 启动指标示例
+
+先生成测试与覆盖率报告：
+
+```bash
+mvn verify
+```
+
+再启动应用：
+
+```bash
+mvn spring-boot:run
+```
+
+如果想在执行 `mvn verify` 后自动刷新一次指标快照，可直接执行：
+
+```bash
+./scripts/verify-and-refresh-metrics.sh
+```
+
+如果指标服务不在本机 `8080`，可通过环境变量指定：
+
+```bash
+TEST_METRICS_BASE_URL=http://192.168.64.20:8080 ./scripts/verify-and-refresh-metrics.sh
+```
+
+验证接口：
+
+```bash
+curl http://localhost:8080/api/test-metrics/summary
+curl -X POST http://localhost:8080/api/test-metrics/refresh
+curl http://localhost:8080/actuator/prometheus | grep training_unit_test
+```
+
+Prometheus 抓取示例见：
+- `monitoring/prometheus/unit-test-metrics-scrape.yml`
+
+Grafana Dashboard JSON 见：
+- `monitoring/grafana/junit-unit-test-metrics-dashboard.json`
+
+注意：
+- 这个脚本只会刷新应用暴露出来的最新测试指标
+- 不会直接写入 Prometheus 数据库
+- 只有当 Prometheus 已经配置抓取该应用，并在下一次 scrape 发生后，指标才会进入 Prometheus 时序库
+
 ## 目录
 
 - 培训大纲：`TRAINING_OUTLINE.md`
